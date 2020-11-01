@@ -7,6 +7,7 @@ import (
 )
 
 type AccountCreated struct {
+	ID
 	Owner string `json:"owner"`
 }
 
@@ -20,17 +21,18 @@ func TestStorage(t *testing.T) {
 
 	// Add few events into the storage
 	for i := 0; i < 10; i++ {
-		err = db.Append(&AccountCreated{
+		id, err := db.Append(&AccountCreated{
 			Owner: "florimond",
 		})
 		assert.NoError(t, err)
+		assert.NotEqual(t, 0, id)
 	}
 
 	changes, err := db.FindChanges(8, "account.created")
 	assert.NoError(t, err)
 	assert.Len(t, changes, 2)
 	assert.Equal(t, []Event{
-		&AccountCreated{Owner: "florimond"},
-		&AccountCreated{Owner: "florimond"},
+		&AccountCreated{Owner: "florimond", ID: ID{9}},
+		&AccountCreated{Owner: "florimond", ID: ID{10}},
 	}, changes)
 }

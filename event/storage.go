@@ -2,9 +2,10 @@ package event
 
 import (
 	"fmt"
+	"reflect"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"reflect"
 )
 
 // Storage abstracts the event sourcing database
@@ -35,9 +36,12 @@ func Open(name string) (*Storage, error) {
 }
 
 // Append appends an event into the store
-func (s *Storage) Append(event Event) error {
+func (s *Storage) Append(event Event) (uint, error) {
 	s.Register(event.Name(), event)
-	return s.db.Create(newRecord(event)).Error
+	newRec := newRecord(event)
+	err := s.db.Create(newRec).Error
+	event.SetEventID(newRec.ID)
+	return newRec.ID, err
 }
 
 // FindChanges finds all of the changes after a certain key
@@ -79,6 +83,7 @@ func (s *Storage) makeEvents(records []record) ([]Event, error) {
 			return nil, err
 		}
 
+		event.SetEventID(r.ID)
 		if err := r.Unmarshal(event); err != nil {
 			return nil, err
 		}

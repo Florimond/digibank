@@ -1,4 +1,4 @@
-package transaction
+package account
 
 // DepositCommand requests to deposit an amount to an account from an ATM
 type DepositCommand struct {
@@ -17,6 +17,11 @@ type TransferCommand struct {
 	AccountFrom string  `json:"from"`   // The account which sends the money
 	AccountTo   string  `json:"to"`     // The account which receives the money
 	Amount      float64 `json:"amount"` // The amount
+}
+
+// OpenAccountCommand requests the creation of a new account
+type OpenAccountCommand struct {
+	Customer string `json:"customer"` // The customer owning the new account
 }
 
 // Command represents a command
