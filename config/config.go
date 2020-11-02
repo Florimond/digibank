@@ -13,13 +13,6 @@ var (
 	errRead = errors.New("config is empty, no config could be loaded")
 )
 
-// Emitterio struct contains this brokers configuration.
-type Emitterio struct {
-	Broker           string `json:"broker" env:"EMITTERIO_BROKER"`
-	EventChannelKey  string `json:"eventChannelKey" env:"EMITTERIO_EVENT_CHAN_KEY"`
-	EventChannelName string `json:"eventChannelName" env:"EMITTERIO_EVENT_CHAN_NAME"`
-}
-
 // Rest struct contains the endpoints' address and the path of the certification files.
 type Rest struct {
 	Endpoint string `json:"endpointTLS" env:"REST_ENDPOINT_TLS"`
@@ -31,26 +24,25 @@ type Prometheus struct {
 	Endpoint string `json:"endpoint" env:"PROM_ENDPOINT"`
 }
 
-// Type represents the storage type
+// StorageType represents the storage type
 type StorageType string
 
-// Supported types
+// Supported StorageTypes types
 const (
-	StorageTypeMongo  = StorageType("mongo")
-	StorageTypeDynamo = StorageType("dynamo")
+	SQLiteTypeMongo = StorageType("sqlite")
 )
 
-type DB struct {
+// Storage configures the storage.
+type Storage struct {
 	Type       StorageType `json:"type" env:"DB_TYPE"`
 	Connection string      `json:"connection" env:"DB_CONNECTION"`
-	Region     string      `json:"region" env:"DB_REGION"`
 }
 
 // Config is the specific config to this service.
+// TODO user env here too, with custome setters, see doc.
 type Config struct {
 	Rest       Rest       `json:"rest"`
-	DB         DB         `json:"db"`
-	Emitterio  Emitterio  `json:"emitterio"`
+	Storage    Storage    `json:"storage"`
 	Prometheus Prometheus `json:"prometheus"`
 }
 

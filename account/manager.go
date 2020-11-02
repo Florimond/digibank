@@ -35,11 +35,11 @@ func NewManager(db EventStore) (*Manager, error) {
 }
 
 // Process processes commands
-func (m *Manager) Process(command Command) error {
+func (m *Manager) Process(command Command) (string, error) {
 	switch command := command.(type) {
 	case *DepositCommand:
 		if _, err := m.findAccount(command.AccountTo); err != nil {
-			return errNoAccount
+			return "", errNoAccount
 		}
 
 		m.appendTx(&Transaction{
@@ -51,10 +51,10 @@ func (m *Manager) Process(command Command) error {
 	case *WithdrawCommand:
 		acc, err := m.findAccount(command.AccountFrom)
 		if err != nil {
-			return errNoAccount
+			return "", errNoAccount
 		}
 		if acc.Amount < command.Amount {
-			return errInsufficientFunds
+			return "", errInsufficientFunds
 		}
 
 		m.appendTx(&Transaction{
@@ -65,14 +65,14 @@ func (m *Manager) Process(command Command) error {
 
 	case *TransferCommand:
 		if _, err := m.findAccount(command.AccountTo); err != nil {
-			return errNoAccount
+			return "", errNoAccount
 		}
 		accFrom, err := m.findAccount(command.AccountFrom)
 		if err != nil {
-			return errNoAccount
+			return "", errNoAccount
 		}
 		if accFrom.Amount < command.Amount {
-			return errInsufficientFunds
+			return "", errInsufficientFunds
 		}
 
 		m.appendTx(&Transaction{
@@ -84,10 +84,11 @@ func (m *Manager) Process(command Command) error {
 		return m.createAccount(command.Customer)
 	}
 
-	return nil
+	return "", nil
 }
 
-func (m *Manager) createAccount(customer string) error {
+// createAccount is the command that creates an account.
+func (m *Manager) createAccount(customer string) (string, error) {
 	event := &OpenAccount{
 		AccountID: uuid.New().String(),
 		Customer:  customer,
@@ -95,12 +96,12 @@ func (m *Manager) createAccount(customer string) error {
 
 	_, err := m.db.Append(event)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	m.Apply(event)
 
-	return nil
+	return event.AccountID, nil
 }
 
 // findAccount finds an account baed on its ID.
@@ -166,13 +167,17 @@ func (m *Manager) Apply(e event.Event) {
 		}
 	case *Transaction:
 		// Error is ignored because the account is supposed to be existing at this stage
-		accFrom, _ := m.findAccount(e.AccountFrom)
-		accFrom.Amount -= e.Amount
-		accFrom.Version = e.EventID
+		if e.AccountFrom != "ATM" {
+			accFrom, _ := m.findAccount(e.AccountFrom)
+			accFrom.Amount -= e.Amount
+			accFrom.Version = e.EventID
+		}
 
-		accTo, _ := m.findAccount(e.AccountTo)
-		accTo.Amount += e.Amount
-		accTo.Version = e.EventID
+		if e.AccountTo != "ATM" {
+			accTo, _ := m.findAccount(e.AccountTo)
+			accTo.Amount += e.Amount
+			accTo.Version = e.EventID
+		}
 	}
 }
 
