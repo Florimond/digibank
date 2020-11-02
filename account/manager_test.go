@@ -38,7 +38,10 @@ func Test_transfers(t *testing.T) {
 	manager := setup(t)
 
 	// Create an account
-	accFlorimondID, err := manager.createAccount("florimond")
+	openAccount1 := &OpenAccountCommand{
+		Customer: "florimond",
+	}
+	accFlorimondID, err := manager.Process(openAccount1)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +71,10 @@ func Test_transfers(t *testing.T) {
 	assert.Equal(t, 25.0, balance)
 
 	// Create another account for a transfer
-	accEmilieID, err := manager.createAccount("emilie")
+	openAccount := &OpenAccountCommand{
+		Customer: "emilie",
+	}
+	accEmilieID, err := manager.Process(openAccount)
 	if err != nil {
 		t.Fatal(err)
 	}

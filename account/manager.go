@@ -38,51 +38,70 @@ func NewManager(db EventStore) (*Manager, error) {
 func (m *Manager) Process(command Command) (string, error) {
 	switch command := command.(type) {
 	case *DepositCommand:
-		if _, err := m.findAccount(command.AccountTo); err != nil {
-			return "", errNoAccount
-		}
-
-		m.appendTx(&Transaction{
-			AccountFrom: "ATM",
-			AccountTo:   command.AccountTo,
-			Amount:      command.Amount,
-		})
-
+		return m.deposit(command)
 	case *WithdrawCommand:
-		acc, err := m.findAccount(command.AccountFrom)
-		if err != nil {
-			return "", errNoAccount
-		}
-		if acc.Amount < command.Amount {
-			return "", errInsufficientFunds
-		}
-
-		m.appendTx(&Transaction{
-			AccountFrom: command.AccountFrom,
-			AccountTo:   "ATM",
-			Amount:      command.Amount,
-		})
-
+		return m.withdraw(command)
 	case *TransferCommand:
-		if _, err := m.findAccount(command.AccountTo); err != nil {
-			return "", errNoAccount
-		}
-		accFrom, err := m.findAccount(command.AccountFrom)
-		if err != nil {
-			return "", errNoAccount
-		}
-		if accFrom.Amount < command.Amount {
-			return "", errInsufficientFunds
-		}
-
-		m.appendTx(&Transaction{
-			AccountFrom: command.AccountFrom,
-			AccountTo:   command.AccountTo,
-			Amount:      command.Amount,
-		})
+		return m.transfer(command)
 	case *OpenAccountCommand:
 		return m.createAccount(command.Customer)
 	}
+
+	return "", nil
+}
+
+// transfer is the command that transfers money from an account to another
+func (m *Manager) transfer(command *TransferCommand) (string, error) {
+	if _, err := m.findAccount(command.AccountTo); err != nil {
+		return "", errNoAccount
+	}
+	accFrom, err := m.findAccount(command.AccountFrom)
+	if err != nil {
+		return "", errNoAccount
+	}
+	if accFrom.Amount < command.Amount {
+		return "", errInsufficientFunds
+	}
+
+	m.appendTx(&Transaction{
+		AccountFrom: command.AccountFrom,
+		AccountTo:   command.AccountTo,
+		Amount:      command.Amount,
+	})
+
+	return "", nil
+}
+
+// withdraw is the command that withdraws money from the account
+func (m *Manager) withdraw(command *WithdrawCommand) (string, error) {
+	acc, err := m.findAccount(command.AccountFrom)
+	if err != nil {
+		return "", errNoAccount
+	}
+	if acc.Amount < command.Amount {
+		return "", errInsufficientFunds
+	}
+
+	m.appendTx(&Transaction{
+		AccountFrom: command.AccountFrom,
+		AccountTo:   "ATM",
+		Amount:      command.Amount,
+	})
+
+	return "", nil
+}
+
+// deposit is the command that deposits money into an account
+func (m *Manager) deposit(command *DepositCommand) (string, error) {
+	if _, err := m.findAccount(command.AccountTo); err != nil {
+		return "", errNoAccount
+	}
+
+	m.appendTx(&Transaction{
+		AccountFrom: "ATM",
+		AccountTo:   command.AccountTo,
+		Amount:      command.Amount,
+	})
 
 	return "", nil
 }
