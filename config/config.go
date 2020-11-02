@@ -15,8 +15,7 @@ var (
 
 // Rest struct contains the endpoints' address and the path of the certification files.
 type Rest struct {
-	Endpoint string `json:"endpointTLS" env:"REST_ENDPOINT_TLS"`
-	CertPath string `json:"certPath" env:"REST_CERT_PATH"`
+	Endpoint string `json:"endpoint" env:"REST_ENDPOINT"`
 }
 
 // Prometheus struct represent the Prometheus' config.

@@ -1,7 +1,6 @@
 {
     "rest": {
-        "endpointTLS": "localhost:8181",
-        "certPath": "./"
+        "endpoint": "localhost:8181",
     },
 
     "DB": {
@@ -9,12 +8,6 @@
         "connection": "file::memory:?cache=shared"
     },
     
-    "emitterio": {
-        "broker": "tcp://localhost:8080",
-        "eventChannelName": "events/",
-	    "eventChannelKey": "e0L8V1TDwP-_OmNSjfB2Lx55XTJOZMCT"
-    },
-
     "prometheus": {
         "endpoint": ":9100"
     }
