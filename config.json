@@ -1,6 +1,6 @@
 {
     "rest": {
-        "endpoint": "localhost:8181",
+        "endpoint": "localhost:8181"
     },
 
     "DB": {
